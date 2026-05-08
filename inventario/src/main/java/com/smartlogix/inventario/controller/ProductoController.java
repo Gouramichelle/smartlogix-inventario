@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RestController // Indica que es un controlador que devuelve JSON (nuestra "Vista")
 @RequestMapping("/api/inventario/productos") // La URL base
 @RequiredArgsConstructor
+
 public class ProductoController {
 
     private final ProductoService productoService;
