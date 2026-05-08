@@ -25,11 +25,13 @@ public class Producto {
     private String nombre;
 
     @Column(nullable = false, unique = true)
-    private String sku; // Código único del producto
-
+    private String sku; 
+    @Column(nullable = false, unique = true)
+    private String descripcion;
     @Column(nullable = false)
     private Integer stock;
 
     @Column(nullable = false)
     private Double precio;
+
 }
