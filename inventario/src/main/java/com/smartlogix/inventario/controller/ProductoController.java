@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartlogix.inventario.model.Producto;
+import com.smartlogix.inventario.model.ProductoDTO;
 import com.smartlogix.inventario.service.ProductoService;
 
 import lombok.RequiredArgsConstructor;
@@ -26,26 +27,45 @@ public class ProductoController {
 
     private final ProductoService productoService;
 
+    private ProductoDTO toDTO(Producto p) {
+        ProductoDTO dto = new ProductoDTO();
+        dto.setId(p.getId());
+        dto.setSku(p.getSku());
+        dto.setNombre(p.getNombre());
+        dto.setDescripcion(p.getDescripcion());
+        dto.setPrecio(p.getPrecio());
+        dto.setStock(p.getStock());
+        return dto;
+    }
+
     // Endpoint GET para listar productos
     @GetMapping
-    public ResponseEntity<List<Producto>> listarProductos() {
-        return ResponseEntity.ok(productoService.obtenerTodos());
+    public ResponseEntity<List<ProductoDTO>> listarProductos() {
+        return ResponseEntity.ok(productoService.obtenerTodos().stream().map(this::toDTO).toList());
+    }
+
+    // Endpoint GET para obtener producto por SKU
+    @GetMapping("/sku/{sku}")
+    public ResponseEntity<ProductoDTO> obtenerPorSku(@PathVariable String sku) {
+        return productoService.findBySku(sku).map(p -> ResponseEntity.ok(toDTO(p))).orElse(ResponseEntity.notFound().build());
     }
 
     // Endpoint POST para crear un producto
     @PostMapping
-    public ResponseEntity<Producto> crearProducto(@RequestBody Producto producto) {
-        Producto nuevoProducto = productoService.guardarProducto(producto);
-        return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
-
-    
+    public ResponseEntity<ProductoDTO> crearProducto(@RequestBody Producto producto) {
+        try {
+            Producto nuevoProducto = productoService.guardarProducto(producto);
+            return new ResponseEntity<>(toDTO(nuevoProducto), HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
     // Endpoint PUT para modificar un producto existente por su ID
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @RequestBody Producto productoDetalles) {
+    public ResponseEntity<ProductoDTO> actualizarProducto(@PathVariable Long id, @RequestBody ProductoDTO productoDetalles) {
         try {
             Producto productoActualizado = productoService.actualizarProducto(id, productoDetalles);
-            return ResponseEntity.ok(productoActualizado);
+            return ResponseEntity.ok(toDTO(productoActualizado));
         } catch (RuntimeException e) {
             // Si el servicio lanza el error de que no existe, devolvemos un código 404 (Not Found)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
